@@ -52,7 +52,7 @@ function fGoingThroughDoor(req, res){
   if(sAction.toLowerCase().search("yes") == -1){
  
     twiml.message("You decide to not open the chest and go back the way you came. Instead, chains come out of nowhere and"+
-                 " tie themselves to your body. You are being forced through the door. Resist?);
+                 " tie themselves to your body. You are being forced through the door. Resist?");
   }
   else{
   twiml.message("You go through the door and find yourself face to face with a guy in a hockey mask with a chainsaw ready to tear"+
