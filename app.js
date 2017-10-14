@@ -15,52 +15,148 @@ var sPath = path.join(__dirname, '.');
 app.use(express.static(sPath));
 app.use(bodyParser.urlencoded({ extended: true }));
 
-function fPlay(req, res){
+function fRun(req, res){
+var sFrom = req.body.From;
+  var sAction = req.body.Body;
+  var twiml = new twilio.twiml.MessagingResponse();
+  if(sAction.toLowerCase().search("yes") != -1){
+    twiml.message("You somehow manage to run up it and escape the haunted house. You win.");
+    oConnections[sFrom].fCurState=fRun;
+  }else{
+    twiml.message("You face him again and he kills you. You have lost.");
+  }
+  res.writeHead(200, {'Content-Type': 'text/xml'});
+  res.end(twiml.toString());
+}
+
+function fEncounter(req, res){
+var sFrom = req.body.From;
+  var sAction = req.body.Body;
+  var twiml = new twilio.twiml.MessagingResponse();
+  if(sAction.toLowerCase().search("run") != -1){
+    twiml.message("You run wherever you can and realize you are trapped by a tall fence. Try and run up it?");
+    oConnections[sFrom].fCurState=fRun;
+  }else if(sAction.toLowerCase().search("fight") != -1){
+    twiml.message("You try punching him in the face and he kills you. You have lost the game.");
+  }else if(sAction.toLowerCase().search("reason") != -1){
+    twiml.message("You try to reason with him and a man falls down to his knees explaining everything. He lets you leave.");
+  }
+  res.writeHead(200, {'Content-Type': 'text/xml'});
+  res.end(twiml.toString());
+}
+
+function fGoingThroughDoor(req, res){
+  var sFrom = req.body.From;
+  var sAction = req.body.Body;
+  var twiml = new twilio.twiml.MessagingResponse();
+  if(sAction.toLowerCase().search("yes") == -1){
+ 
+    twiml.message("You decide to not open the chest and go back the way you came. Instead, chains come out of nowhere and"+
+                 " tie themselves to your body. You are being forced through the door. Resist?);
+  }
+  else{
+  twiml.message("You go through the door and find yourself face to face with a guy in a hockey mask with a chainsaw ready to tear"+
+               " your body apart. Run, fight, or reason?");
+  }
+  oConnections[sFrom].fCurState = fEncounter;    
+  
+  res.writeHead(200, {'Content-Type': 'text/xml'});
+  res.end(twiml.toString());
+}
+
+function fOpenChest(req, res){
   var sFrom = req.body.From;
   var sAction = req.body.Body;
   var twiml = new twilio.twiml.MessagingResponse();
   if(sAction.toLowerCase().search("yes") != -1){
-    twiml.message("Oh glory. Here it is. I got it for you. Do you throw it again?");
-  }else if(sAction.toLowerCase().search("no") != -1){
-    twiml.message("Oh well. Wait .... Over there is that a stick or a fire hydrant?");
-    oConnections[sFrom].fCurState = fStickOrHydrant;
+    twiml.message("You open the chest and find $50 and a paper with 'open the door damnit' on it. Open the door?");
+    oConnections[sFrom].fCurState=fGoingThroughDoor;
   }else{
-    twiml.message("Wow! I've never seen you do " + sAction + " before. Wait .... Over there is that a stick or a fire hydrant?")
-    oConnections[sFrom].fCurState = fStickOrHydrant;    
+    oConnections[sFrom].fCurState = fGoingThroughDoor;    
   }
   res.writeHead(200, {'Content-Type': 'text/xml'});
   res.end(twiml.toString());
 }
 
-function fStick(req, res){
+function fFlipSwitch(req, res){
   var sFrom = req.body.From;
   var sAction = req.body.Body;
   var twiml = new twilio.twiml.MessagingResponse();
-  if(sAction.toLowerCase().search("eat") != -1){
-    oConnections[sFrom].fCurState = fStickOrHydrant;
-    twiml.message("Yum! Sticks are the best thing ever lot's of roughage. Wait .... Over there is that a stick or a fire hydrant?");
-  }else if(sAction.toLowerCase().search("take") != -1){
-    twiml.message("Please play with me. Do you throw the stick?");
-    oConnections[sFrom].fCurState = fPlay;
+  if(sAction.toLowerCase().search("yes") != -1){
+    twiml.message("You flip the switch lighting the whole room. You notice a sign saying go through the other door. Go through it?");
+    oConnections[sFrom].fCurState=fGoingThroughDoor;
   }else{
-    twiml.message("Wow! I've never done " + sAction + " before. Wait .... Over there is that a stick or a fire hydrant?")
-    oConnections[sFrom].fCurState = fStickOrHydrant;    
+    twiml.message("You don't flip it but examine the body. You find a key and notice a chest. Open the chest?");
+    oConnections[sFrom].fCurState = fOpenChest;
   }
   res.writeHead(200, {'Content-Type': 'text/xml'});
   res.end(twiml.toString());
 }
 
-function fStickOrHydrant(req, res){
+function fExamine(req, res){
   var sFrom = req.body.From;
   var sAction = req.body.Body;
   var twiml = new twilio.twiml.MessagingResponse();
-  if(sAction.toLowerCase().search("stick") != -1){
-    twiml.message("I love sticks.... Should I eat it or take it to my person so he will throw it?");
-    oConnections[sFrom].fCurState = fStick;
-  }else if(sAction.toLowerCase().search("hydrant") != -1){  
-    twiml.message("Pee mail! How exciting. Wait .... Over there is that a stick or a fire hydrant?");
-  }else {
-    twiml.message("Wow! I've never seen " + sAction + " before. Wait .... Over there is that a stick or a fire hydrant?")
+  if(sAction.toLowerCase().search("examine") != -1){
+    oConnections[sFrom].fCurState = fFlipSwitch;
+    twiml.message("You find a switch. Flip it?");
+  }
+  else{
+    twiml.message("You leave the room and go back to the doors. Right or Middle?");
+    oConnections[sFrom].fCurState = fPickaDoor;    
+  }
+  res.writeHead(200, {'Content-Type': 'text/xml'});
+  res.end(twiml.toString());
+}
+
+function fWarning(req,res){
+  var sFrom = req.body.From;
+  var sAction = req.body.Body;
+  var twiml = new twilio.twiml.MessagingResponse();
+  if(sAction.toLowerCase().search("yes") != -1){
+    twiml.message("You exit the cave after a few hours and live. You have won.");
+  }
+  else
+  {
+    twiml.message("You ignore the sign and a hidden door opens up and a Friday the 13th dude comes out of it and shoots you. You lost.");
+  }
+  res.writeHead(200, {'Content-Type': 'text/xml'});
+  res.end(twiml.toString());
+}
+  
+function fExplore(req, res){
+  var sFrom = req.body.From;
+  var sAction = req.body.Body;
+  var twiml = new twilio.twiml.MessagingResponse();
+  if(sAction.toLowerCase().search("yes") != -1){
+    twiml.message("You find a switch and light the cave. You find a sign saying 'save yourself' and pointing to the exit. Heed its warning?");
+    oConnections[sFrom].fCurState = fWarning;
+  }
+  else{  
+    twiml.message("You sit there and wait for someone to get you. You fall asleep and wake up next to your body. You have died and lost.");
+  }
+  res.writeHead(200, {'Content-Type': 'text/xml'});
+  res.end(twiml.toString());
+}
+
+function fPickaDoor(req, res){
+  var sFrom = req.body.From;
+  var sAction = req.body.Body;
+  var twiml = new twilio.twiml.MessagingResponse();
+  if(sAction.toLowerCase().search("Left") != -1){
+    twiml.message("There is nothing in the room. Examine further?");
+    oConnections[sFrom].fCurState = fExamine;
+  }else if(sAction.toLowerCase().search("Right") != -1){  
+    twiml.message("You see a statue and a frankenstein machine. Turn the machine on?");
+    oConnections[sFrom].fCurState=fFlipSwitch;
+  }else if(sAction.toLowerCase().search("Middle") !=-1{
+    twiml.message("You enter and see a body on a pile of blood.");
+  oConnections[sFrom].fCurState=fExamine;
+  }
+  else
+  {
+    twiml.message("You turn and fall down a trap door into a cave. Explore?");
+    oConnections[sFrom].fCurState = fExplore;
   }
   res.writeHead(200, {'Content-Type': 'text/xml'});
   res.end(twiml.toString());
@@ -68,9 +164,9 @@ function fStickOrHydrant(req, res){
 
 function fBeginning(req, res){
   var sFrom = req.body.From;
-  oConnections[sFrom].fCurState = fStickOrHydrant;
+  oConnections[sFrom].fCurState = fPickaDoor;
   var twiml = new twilio.twiml.MessagingResponse();
-  twiml.message('Hi ... My name is Sheba. I am very enthusiastic about this game. Wait! Is that a stick or a fire hydrant?');
+  twiml.message('Hello. Welcome to the haunted house. There are 3 doors. Left, Right, or Middle?');
   res.writeHead(200, {'Content-Type': 'text/xml'});
   res.end(twiml.toString());
 
