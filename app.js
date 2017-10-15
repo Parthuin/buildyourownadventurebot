@@ -164,9 +164,9 @@ function fPickaDoor(req, res){
 
 function fBeginning(req, res){
   var sFrom = req.body.From;
-  oConnections[sFrom].fCurState = fPickaDoor;
   var twiml = new twilio.twiml.MessagingResponse();
   twiml.message('Hello. Welcome to the haunted house. There are 3 doors. Left, Right, or Middle?');
+  oConnections[sFrom].fCurState = fPickaDoor;
   res.writeHead(200, {'Content-Type': 'text/xml'});
   res.end(twiml.toString());
 
