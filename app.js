@@ -149,7 +149,7 @@ function fPickaDoor(req, res){
   }else if(sAction.toLowerCase().search("Right") != -1){  
     twiml.message("You see a statue and a frankenstein machine. Turn the machine on?");
     oConnections[sFrom].fCurState=fFlipSwitch;
-  }else if(sAction.toLowerCase().search("Middle") !=-1{
+  }else if(sAction.toLowerCase().search("Middle") !=-1){
     twiml.message("You enter and see a body on a pile of blood.");
   oConnections[sFrom].fCurState=fExamine;
   }
